@@ -23,6 +23,9 @@
       idx: state.idx,
       selected: state.selected,
       graded: state.graded,
+      revealed: state.revealed,
+      selfCorrect: state.selfCorrect,
+      drafts: state.drafts,
       startedAt: state.startedAt,
       mode: state.mode,
       title: state.title,
@@ -82,6 +85,9 @@
       idx: 0,
       selected: {},
       graded: {},
+      revealed: {},
+      selfCorrect: {},
+      drafts: {},
       startedAt: Date.now(),
       title: config.title || buildTitle({ subject, chapter: config.chapter, mode }),
       subtitle: config.subtitle || buildSubtitle(mode, subject),
@@ -112,6 +118,9 @@
       idx: Math.min(saved.idx || 0, queue.length - 1),
       selected: saved.selected || {},
       graded: saved.graded || {},
+      revealed: saved.revealed || {},
+      selfCorrect: saved.selfCorrect || {},
+      drafts: saved.drafts || {},
       startedAt: Date.now() - elapsed * 1000,
       title: saved.title || "继续练习",
       subtitle: saved.subtitle || "上次进度",
@@ -144,6 +153,10 @@
     return left.length === right.length && left.every((value, index) => value === right[index]);
   }
 
+  function isSubjective(question) {
+    return question?.type === "fill" || question?.type === "short";
+  }
+
   function creditTime() {
     if (!state) return;
     const now = Date.now();
@@ -154,7 +167,7 @@
 
   function choose(letter) {
     const question = current();
-    if (!question || isGraded(question.id)) return;
+    if (!question || isGraded(question.id) || isSubjective(question)) return;
     const chosen = selectedOf(question.id);
     if (question.type === "multiple") {
       const next = chosen.includes(letter) ? chosen.filter(item => item !== letter) : [...chosen, letter];
@@ -168,7 +181,7 @@
 
   function grade() {
     const question = current();
-    if (!question || isGraded(question.id)) return;
+    if (!question || isGraded(question.id) || isSubjective(question)) return;
     const chosen = selectedOf(question.id);
     if (!chosen.length) {
       toast("请先选择一个答案", "warn");
@@ -187,6 +200,38 @@
         if (state && current()?.id === question.id && location.hash === "#/practice") next();
       }, 850);
     }
+  }
+
+  function revealAnswer() {
+    const question = current();
+    if (!question || !isSubjective(question)) return;
+    state.revealed[question.id] = true;
+    save();
+    QZ.router.render();
+  }
+
+  function selfGrade(correct) {
+    const question = current();
+    if (!question || !isSubjective(question) || isGraded(question.id)) return;
+    state.revealed[question.id] = true;
+    state.selfCorrect[question.id] = Boolean(correct);
+    state.graded[question.id] = true;
+    state.lastResult = { id: question.id, correct: Boolean(correct) };
+    QZ.store.recordAnswer(question.id, Boolean(correct));
+    creditTime();
+    save();
+    QZ.router.render();
+    if (correct && QZ.store.state.settings.autoNext) {
+      clearAdvance();
+      advanceTimer = setTimeout(() => {
+        if (state && current()?.id === question.id && location.hash === "#/practice") next();
+      }, 850);
+    }
+  }
+
+  function saveDraft(id, value) {
+    if (!state) return;
+    state.drafts[id] = value;
   }
 
   function next() {
@@ -234,7 +279,9 @@
         results.idsSkipped.push(id);
         continue;
       }
-      const correct = sameSet(selectedOf(id), question.answer);
+      const correct = isSubjective(question)
+        ? Boolean(state.selfCorrect[id])
+        : sameSet(selectedOf(id), question.answer);
       if (correct) {
         results.correct += 1;
         results.idsCorrect.push(id);
@@ -313,7 +360,12 @@
     }
     const graded = isGraded(question.id);
     const chosen = selectedOf(question.id);
-    const correct = graded && sameSet(chosen, question.answer);
+    const subjective = isSubjective(question);
+    const correct = graded
+      ? subjective
+        ? Boolean(state.selfCorrect[question.id])
+        : sameSet(chosen, question.answer)
+      : false;
     const missing = graded ? question.answer.filter(letter => !chosen.includes(letter)) : [];
     const extra = graded ? chosen.filter(letter => !question.answer.includes(letter)) : [];
     const resultLabel = correct ? "回答正确" : missing.length && !extra.length ? "漏选，回答不完整" : "回答错误";
@@ -322,7 +374,8 @@
     let rightCount = 0;
     for (const id of Object.keys(state.graded)) {
       const item = QZ.data.byId(id);
-      if (item && sameSet(selectedOf(id), item.answer)) rightCount += 1;
+      if (!item) continue;
+      if (isSubjective(item) ? state.selfCorrect[id] : sameSet(selectedOf(id), item.answer)) rightCount += 1;
     }
     const accuracy = answered ? rightCount / answered : 0;
     const isLast = state.idx === state.queue.length - 1;
@@ -355,30 +408,61 @@
             </button>
           </div>
           <h2 class="stem">${escapeHtml(question.stem)}</h2>
-          <div class="options" role="group" aria-label="选项">
-            ${question.options
-              .map((option, index) => {
-                const letter = String.fromCharCode(65 + index);
-                return `<button class="${optionClass(question, letter)}" data-action="choose" data-letter="${letter}" ${graded ? "disabled" : ""} aria-pressed="${chosen.includes(letter)}">
-                  <span class="option-letter">${letter}</span>
-                  <span class="option-text">${escapeHtml(option)}</span>
-                  <span class="option-mark" aria-hidden="true">${optionMark(question, letter)}</span>
-                </button>`;
-              })
-              .join("")}
-          </div>
           ${
-            question.type === "multiple" && !graded
-              ? `<button class="btn btn-primary submit-answer" data-action="submit-answer" ${chosen.length ? "" : "disabled"}>确认作答</button>
-                 <p class="multi-hint">多选题：选好后点击“确认作答”</p>`
-              : ""
+            subjective
+              ? `<div class="subjective-box">
+                  <label class="subjective-label" for="answer-${question.id}">你的答案</label>
+                  <textarea id="answer-${question.id}" class="subjective-input" data-subjective-input="${question.id}" rows="${question.type === "fill" ? 2 : 6}" placeholder="${question.type === "fill" ? "填写答案要点…" : "写下你的作答思路…"}">${escapeHtml(state.drafts[question.id] || "")}</textarea>
+                  ${
+                    !state.revealed[question.id] && !graded
+                      ? `<button class="btn btn-primary submit-answer" data-action="reveal-answer">查看参考答案</button>`
+                      : ""
+                  }
+                  ${
+                    state.revealed[question.id] || graded
+                      ? `<div class="reference-answer">
+                          <h4>参考答案</h4>
+                          <p>${escapeHtml(question.referenceAnswer || "原书未提供参考答案。")}</p>
+                          ${question.explain ? `<p class="reference-explain">${escapeHtml(question.explain)}</p>` : ""}
+                        </div>`
+                      : ""
+                  }
+                  ${
+                    state.revealed[question.id] && !graded
+                      ? `<div class="self-grade">
+                          <span>对照参考答案自评：</span>
+                          <button class="btn btn-ghost btn-sm" data-action="self-grade" data-correct="true">我答对了</button>
+                          <button class="btn btn-ghost btn-sm" data-action="self-grade" data-correct="false">没答对</button>
+                        </div>`
+                      : ""
+                  }
+                  ${graded ? `<p class="self-result">已自评：${correct ? "答对" : "没答对"}；本题计入错题本时会按自评结果处理。</p>` : ""}
+                </div>`
+              : `<div class="options" role="group" aria-label="选项">
+                  ${question.options
+                    .map((option, index) => {
+                      const letter = String.fromCharCode(65 + index);
+                      return `<button class="${optionClass(question, letter)}" data-action="choose" data-letter="${letter}" ${graded ? "disabled" : ""} aria-pressed="${chosen.includes(letter)}">
+                        <span class="option-letter">${letter}</span>
+                        <span class="option-text">${escapeHtml(option)}</span>
+                        <span class="option-mark" aria-hidden="true">${optionMark(question, letter)}</span>
+                      </button>`;
+                    })
+                    .join("")}
+                </div>
+                ${
+                  question.type === "multiple" && !graded
+                    ? `<button class="btn btn-primary submit-answer" data-action="submit-answer" ${chosen.length ? "" : "disabled"}>确认作答</button>
+                       <p class="multi-hint">多选题：选好后点击“确认作答”</p>`
+                    : ""
+                }`
           }
           ${
             graded
               ? `<div class="feedback ${correct ? "is-ok" : "is-bad"}">
                   <div class="feedback-head">
-                    <strong>${resultLabel}</strong>
-                    <span>正确答案：${question.answer.join("、")}</span>
+                    <strong>${subjective ? (correct ? "自评：答对" : "自评：没答对") : resultLabel}</strong>
+                    <span>${subjective ? "参考答案见上方" : `正确答案：${question.answer.join("、")}`}</span>
                   </div>
                   <p>${escapeHtml(question.explain || "暂无解析")}</p>
                   <div class="feedback-foot"><span>考点 · ${escapeHtml(question.tag || "未标注")}</span><span>${escapeHtml(question.source || question.id)}</span></div>
@@ -443,19 +527,23 @@
                         <summary>
                           <span class="pill">${typeLabel(question.type)}</span>
                           <span class="review-stem">${escapeHtml(question.stem)}</span>
-                          <span class="review-flag">${chosen.length ? "答错" : "未答"}</span>
+                          <span class="review-flag">${isSubjective(question) ? (state.graded[question.id] ? "自评答错" : "未答") : chosen.length ? "答错" : "未答"}</span>
                         </summary>
                         <div class="review-body">
-                          <div class="review-options">
-                            ${question.options
-                              .map((option, index) => {
-                                const letter = String.fromCharCode(65 + index);
-                                const cls = question.answer.includes(letter) ? "correct" : chosen.includes(letter) ? "wrong" : "";
-                                return `<div class="review-option ${cls}"><span>${letter}</span>${escapeHtml(option)}</div>`;
-                              })
-                              .join("")}
-                          </div>
-                          <p class="review-answer">你的答案：${chosen.length ? chosen.join("、") : "未作答"}　正确答案：${question.answer.join("、")}</p>
+                          ${
+                            isSubjective(question)
+                              ? `<p class="review-answer">参考答案：${escapeHtml(question.referenceAnswer || "原书未提供")}</p>`
+                              : `<div class="review-options">
+                                  ${question.options
+                                    .map((option, index) => {
+                                      const letter = String.fromCharCode(65 + index);
+                                      const cls = question.answer.includes(letter) ? "correct" : chosen.includes(letter) ? "wrong" : "";
+                                      return `<div class="review-option ${cls}"><span>${letter}</span>${escapeHtml(option)}</div>`;
+                                    })
+                                    .join("")}
+                                </div>
+                                <p class="review-answer">你的答案：${chosen.length ? chosen.join("、") : "未作答"}　正确答案：${question.answer.join("、")}</p>`
+                          }
                           <p class="review-explain">${escapeHtml(question.explain || "暂无解析")}</p>
                         </div>
                       </details>`;
@@ -502,6 +590,9 @@
     discard,
     choose,
     grade,
+    revealAnswer,
+    selfGrade,
+    saveDraft,
     next,
     prev,
     toggleFav,

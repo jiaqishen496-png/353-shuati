@@ -18,6 +18,8 @@
     { id: "exam", test: /^#\/exam$/, view: () => QZ.exam.view("setup") },
     { id: "exam-run", test: /^#\/exam\/run$/, view: () => QZ.exam.view("run") },
     { id: "exam-result", test: /^#\/exam\/result$/, view: () => QZ.exam.view("result") },
+    { id: "library", test: /^#\/library$/, view: () => QZ.library.renderList() },
+    { id: "library-book", test: /^#\/library\/([\w-]+)$/, view: slug => QZ.library.renderBook(slug) },
     { id: "wrong", test: /^#\/wrong$/, view: renderWrong },
     { id: "fav", test: /^#\/fav$/, view: renderFav },
     { id: "stats", test: /^#\/stats$/, view: renderStats },
@@ -81,6 +83,7 @@
         <a href="#/fav" data-nav="fav"><span class="nav-icon">☆</span>收藏夹<span class="nav-badge" data-badge="fav">0</span></a>
         <a href="#/exam" data-nav="exam"><span class="nav-icon">◷</span>模拟考试</a>
         <a href="#/stats" data-nav="stats"><span class="nav-icon">▤</span>学习统计</a>
+        <a href="${window.QZ_LIBRARY_MODE ? "#/library" : "library.html"}" data-nav="library"><span class="nav-icon">▥</span>教材题库</a>
         <a href="#/settings" data-nav="settings"><span class="nav-icon">⚙</span>设置与题库</a>
       </div>
       <div class="side-heading">题库 · ${QZ.data.total} 题</div>
@@ -125,7 +128,10 @@
     }
     document.querySelectorAll(".side-nav a").forEach(link => {
       const key = link.dataset.nav;
-      const active = key === route.id || (route.id === "subject" && key === "home");
+      const active =
+        key === route.id ||
+        (route.id === "subject" && key === "home") ||
+        (route.id === "library-book" && key === "library");
       link.classList.toggle("active", active);
     });
     document.querySelectorAll(".side-subject").forEach(node => {
@@ -211,10 +217,10 @@
             <strong>学习统计</strong>
             <span>${totals.seen} 题次 · ${totals.mastered} 题掌握</span>
           </a>
-          <a class="quick-card" href="#/settings">
-            <span class="quick-icon">⚙</span>
-            <strong>导入题库</strong>
-            <span>支持 JSON 自定义题目</span>
+          <a class="quick-card" href="library.html">
+            <span class="quick-icon">▥</span>
+            <strong>教材题库</strong>
+            <span>扫描件 OCR 草稿 · 按书练习</span>
           </a>
         </section>
 
@@ -794,6 +800,12 @@
       case "submit-answer":
         QZ.practice.grade();
         break;
+      case "reveal-answer":
+        QZ.practice.revealAnswer();
+        break;
+      case "self-grade":
+        QZ.practice.selfGrade(el.dataset.correct === "true");
+        break;
       case "prev":
         QZ.practice.prev();
         break;
@@ -840,6 +852,15 @@
       case "exam-review-wrong":
         QZ.exam.reviewWrong();
         break;
+      case "start-library":
+        if (QZ.library) {
+          await QZ.library.start(el.dataset.slug, {
+            chapter: el.dataset.chapter || undefined,
+            mode: el.dataset.mode || "seq",
+            limit: el.dataset.limit || undefined
+          });
+        }
+        break;
       case "set-theme":
         setTheme(el.dataset.themeValue);
         break;
@@ -871,6 +892,11 @@
     if (!input) return;
     QZ.store.setSetting(input.dataset.toggle, input.checked);
     toast(input.checked ? "已开启" : "已关闭");
+  });
+
+  document.addEventListener("input", event => {
+    const input = event.target.closest("[data-subjective-input]");
+    if (input) QZ.practice.saveDraft(input.dataset.subjectiveInput, input.value);
   });
 
   document.addEventListener("submit", event => {
@@ -942,6 +968,9 @@
 
   async function boot() {
     applyTheme();
+    if (window.QZ_LIBRARY_MODE) {
+      document.title = "教材题库（OCR 草稿）｜353 刷题室";
+    }
     try {
       await QZ.data.load();
     } catch (error) {
@@ -951,6 +980,14 @@
         <p class="settings-note">请通过本地服务器打开网站，例如在项目目录运行 <code>python -m http.server 8000</code>，然后访问 http://localhost:8000 。直接双击 index.html 会被浏览器阻止读取题库文件。</p>
       </section>`;
       return;
+    }
+    if (window.QZ_LIBRARY_MODE) {
+      try {
+        await QZ.library.loadIndex();
+      } catch (error) {
+        console.warn(error);
+      }
+      if (!location.hash || location.hash === "#/") location.hash = "#/library";
     }
     buildSidebar();
     render();

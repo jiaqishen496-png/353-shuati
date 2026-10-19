@@ -222,9 +222,68 @@
     return rows.sort((a, b) => a.accuracy - b.accuracy || b.seen - a.seen).slice(0, limit);
   }
 
+  let libraryIndex = null;
+
+  async function loadLibraryIndex() {
+    const response = await fetch("data/imported/index.json", { cache: "no-store" });
+    if (!response.ok) throw new Error("教材题库索引尚未生成");
+    libraryIndex = await response.json();
+    return libraryIndex;
+  }
+
+  function registerBook(book, questions) {
+    const subjectId = `lib-${book.slug}`;
+    const existing = data.subjects.find(subject => subject.id === subjectId);
+    if (existing) {
+      const oldQuestions = data.bySubject.get(subjectId) || [];
+      const oldIds = new Set(oldQuestions.map(question => question.id));
+      data.subjects = data.subjects.filter(subject => subject.id !== subjectId);
+      data.questions = data.questions.filter(question => !oldIds.has(question.id));
+      for (const id of oldIds) data.byId.delete(id);
+      data.bySubject.delete(subjectId);
+    }
+
+    const chapters = [];
+    const counts = new Map();
+    for (const question of questions) {
+      const chapter = question.chapter || "未分章";
+      if (!counts.has(chapter)) {
+        counts.set(chapter, 0);
+        chapters.push(chapter);
+      }
+      counts.set(chapter, counts.get(chapter) + 1);
+      question.subject = subjectId;
+      question.source = question.source || book.source || book.title;
+    }
+
+    const subjectMeta = {
+      id: subjectId,
+      name: book.title,
+      short: "教材",
+      color: "#8a5f7a",
+      description: book.subtitle || "教材配套习题 · OCR 草稿",
+      count: questions.length,
+      chapters: chapters.map(name => ({ name, count: counts.get(name) })),
+      library: true,
+      draft: true,
+      slug: book.slug
+    };
+    data.subjects.push(subjectMeta);
+    data.bySubject.set(subjectId, questions);
+    for (const question of questions) {
+      data.questions.push(question);
+      data.byId.set(question.id, question);
+    }
+    data.total = data.questions.length;
+    return subjectMeta;
+  }
+
   QZ.data = {
     get manifest() {
       return data.manifest;
+    },
+    get libraryIndex() {
+      return libraryIndex;
     },
     get subjects() {
       return data.subjects;
@@ -245,6 +304,8 @@
     subjectStats,
     chapterStats,
     weakChapters,
-    shuffle
+    shuffle,
+    loadLibraryIndex,
+    registerBook
   };
 })();

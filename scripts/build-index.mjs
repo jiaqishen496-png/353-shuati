@@ -62,7 +62,7 @@ const SUBJECTS = [
   }
 ];
 
-const TYPES = new Set(["single", "multiple", "judge"]);
+const TYPES = new Set(["single", "multiple", "judge", "fill", "short"]);
 const errors = [];
 const warnings = [];
 const allIds = new Set();
@@ -96,7 +96,20 @@ function validateQuestion(file, question, index, subjectId) {
   if (!nonEmpty(question.tag)) warn(file, `${where} 缺少考点标签`);
   if (!nonEmpty(question.explain)) warn(file, `${where} 缺少解析`);
   if (!TYPES.has(question.type)) {
-    fail(file, `${where} type 必须是 single / multiple / judge`);
+    fail(file, `${where} type 必须是 single / multiple / judge / fill / short`);
+  }
+  if (question.type === "fill" || question.type === "short") {
+    if (Array.isArray(question.options) && question.options.length) {
+      warn(file, `${where} 填空/简答题建议 options 为空数组`);
+    }
+    if (Array.isArray(question.answer) && question.answer.length) {
+      warn(file, `${where} 填空/简答题建议 answer 为空数组，参考答案放 referenceAnswer`);
+    }
+    if (!nonEmpty(question.referenceAnswer)) {
+      warn(file, `${where} 缺少 referenceAnswer`);
+    }
+    if (!nonEmpty(question.stem)) fail(file, `${where} 缺少题干`);
+    return;
   }
   if (!Array.isArray(question.options) || question.options.length < 2) {
     fail(file, `${where} options 至少需要 2 个选项`);

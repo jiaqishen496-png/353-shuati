@@ -16,6 +16,7 @@
 - 学习统计：累计题次、正确率、掌握数、连续天数、近 12 周热力图、薄弱章节
 - 学习进度保存在浏览器本地；支持导出 / 导入 JSON，换设备可迁移
 - 自定义题库：导入 JSON 后作为“我的题库”科目出现
+- 教材题库（`library.html`）：按书懒加载扫描件 OCR 草稿，支持单选/多选/判断/填空/简答
 - 深色 / 浅色 / 跟随系统主题；移动端抽屉目录与响应式布局
 - 键盘快捷键：`A–D` 选择、`Enter` 下一题、`F` 收藏、`M` 标记
 
@@ -54,6 +55,41 @@ python -m http.server 8000
 - Android：Chrome 打开网站 → 右上角菜单 → **安装应用 / 添加到主屏幕**
 
 通过 GitHub Pages（HTTPS）访问时，首次联网加载后会缓存应用外壳和题库，之后可以离线刷题；答题进度始终保存在本机浏览器。
+
+## 教材题库（OCR 草稿）
+
+教材题库是独立入口：<https://jiaqishen496-png.github.io/353-shuati/library.html>。它从扫描版习题集提取，按书分章懒加载；每本书、每道题都标注为 OCR 草稿，尚未逐题校对。
+
+当前已接入试点：
+
+- 《流行病学学习指导与习题集（第4版）》第五章“队列研究”
+- 58 题：33 道单选、8 道填空、12 个名词解释、4 道简答、1 道分析计算
+- 文件：`data/imported/books/epi-ch5.json`；严格原始格式：`data/imported/raw/epi-ch5.json`；复核记录：`data/imported/meta/epi-ch5.json`
+
+### OCR 管线
+
+扫描件全部是图片 PDF，需先做本地 OCR。依赖装在 `work/ocr-venv`：
+
+```powershell
+work\ocr-venv\Scripts\python.exe scripts\ocr\ocr_book.py `
+  --pdf "C:\path\book.pdf" --out work\ocr\book --start 1 --end 141 --dpi 300
+
+work\ocr-venv\Scripts\python.exe scripts\ocr\lines.py `
+  --pages work\ocr\book\pages.jsonl --out work\ocr\book\lines.txt
+
+work\ocr-venv\Scripts\python.exe scripts\ocr\parse_choice.py `
+  --lines work\ocr\book\lines.txt --out work\ocr\book\choice.json --chapter "第五章 队列研究"
+
+node scripts/import-books.mjs
+```
+
+`ocr_book.py` 支持断点续跑：`pages.jsonl` 已存在的页会自动跳过；临时 PNG 在识别后删除。填空/简答和跨页题目仍需按书校正，不能把 OCR 结果直接当成正式题库。
+
+### 批量状态
+
+- 已确认 20 个 PDF 共约 4,874 页，全部为纯扫描图像。
+- 《流行病学》全书 OCR 正在后台分批执行；完成后按章解析，再接入 `data/imported/`。
+- 2 个 `.doc` 需要先在 WPS 中另存为 `.docx`，再进入同一管线。
 
 ## 修改题库
 

@@ -73,7 +73,11 @@
     const groups = subjectIds
       .map(id => ({
         id,
-        pool: QZ.data.shuffle(QZ.data.questions.filter(question => question.subject === id))
+        pool: QZ.data.shuffle(
+          QZ.data.questions.filter(
+            question => question.subject === id && ["single", "multiple", "judge"].includes(question.type)
+          )
+        )
       }))
       .filter(group => group.pool.length);
     const available = groups.reduce((sum, group) => sum + group.pool.length, 0);

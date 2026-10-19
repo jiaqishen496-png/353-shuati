@@ -32,7 +32,15 @@
   }
 
   function typeLabel(type) {
-    return { single: "单选题", multiple: "多选题", judge: "判断题" }[type] || "单选题";
+    return (
+      {
+        single: "单选题",
+        multiple: "多选题",
+        judge: "判断题",
+        fill: "填空题",
+        short: "简答题"
+      }[type] || "单选题"
+    );
   }
 
   function letters(count) {

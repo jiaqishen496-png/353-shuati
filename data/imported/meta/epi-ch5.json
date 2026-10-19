@@ -1,0 +1,25 @@
+{
+  "slug": "epi-ch5",
+  "title": "流行病学学习指导与习题集（第4版）· 第五章 队列研究",
+  "pages": "37-47",
+  "ocr": {
+    "engine": "RapidOCR 1.4.4 (PP-OCR)",
+    "dpi": 300,
+    "rendered": "pdftoppm"
+  },
+  "counts": {
+    "total": 58,
+    "single": 33,
+    "fill": 8,
+    "short": 17
+  },
+  "review": {
+    "status": "draft",
+    "checked": false,
+    "notes": [
+      "选择题答案来自原书章末答案区",
+      "填空题、名词解释、简答题的参考答案来自章末参考答案",
+      "OCR 可能有个别错字，尚未逐题校对"
+    ]
+  }
+}
