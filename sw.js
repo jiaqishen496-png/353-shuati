@@ -1,18 +1,18 @@
 /* 离线缓存：应用外壳 + 题库。版本号变化后会自动清理旧缓存。 */
-const VERSION = "qz353-v2";
+const VERSION = "qz353-v3";
 const CORE = [
   "./",
   "./index.html",
   "./library.html",
   "./manifest.webmanifest",
-  "./assets/styles.css",
-  "./assets/store.js",
-  "./assets/data.js",
-  "./assets/ui.js",
-  "./assets/practice.js",
-  "./assets/exam.js",
-  "./assets/library.js",
-  "./assets/app.js",
+  "./assets/styles.css?v=3",
+  "./assets/store.js?v=3",
+  "./assets/data.js?v=3",
+  "./assets/ui.js?v=3",
+  "./assets/practice.js?v=3",
+  "./assets/exam.js?v=3",
+  "./assets/library.js?v=3",
+  "./assets/app.js?v=3",
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",
   "./assets/icons/icon-maskable-512.png",
