@@ -1,0 +1,22 @@
+[
+  {
+    "slug": "epi-ch5",
+    "title": "流行病学学习指导与习题集（第4版）· 第五章 队列研究",
+    "subject": "流行病学",
+    "subtitle": "名词解释、填空题、33 道选择题、简答题与分析计算题",
+    "file": "data/imported/books/epi-ch5.json",
+    "pages": "37-47",
+    "source": "流行病学学习指导与习题集（第4版）· 第五章 队列研究",
+    "status": "draft"
+  },
+  {
+    "slug": "epi-full",
+    "title": "流行病学学习指导与习题集（第4版）· 全书选择题",
+    "subject": "流行病学",
+    "subtitle": "15 章 353 道选择题；350 题已匹配章末答案，3 题缺答案",
+    "file": "data/imported/books/epi-full.json",
+    "pages": "7-141",
+    "source": "流行病学学习指导与习题集（第4版）· 全书选择题",
+    "status": "draft"
+  }
+]

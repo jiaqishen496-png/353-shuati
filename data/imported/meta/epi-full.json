@@ -1,0 +1,26 @@
+{
+  "slug": "epi-full",
+  "title": "流行病学学习指导与习题集（第4版）· 全书选择题",
+  "pages": "7-141",
+  "ocr": {
+    "engine": "RapidOCR 1.4.4 (PP-OCR)",
+    "dpi": 300,
+    "rendered": "pdftoppm"
+  },
+  "counts": {
+    "total": 353,
+    "withAnswer": 350,
+    "missingAnswer": 3,
+    "chapters": 15
+  },
+  "review": {
+    "status": "draft",
+    "checked": false,
+    "notes": [
+      "选择题答案来自各章章末答案区",
+      "3题未匹配到答案",
+      "图表题（如第14章meta分析森林图）题干为OCR平铺，需人工复核",
+      "尚未逐题校对"
+    ]
+  }
+}
