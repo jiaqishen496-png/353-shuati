@@ -15,7 +15,7 @@
     {"slug": "env-1", "file": "环境卫生学学习指导与习题集.pdf", "subject": "环境卫生学", "pages": 183, "status": "pending"},
     {"slug": "env-2", "file": "环境卫生学学习指导与习题集第2版【卫灿（WECAN）公卫研习社】.pdf", "subject": "环境卫生学", "pages": 224, "status": "pending"},
     {"slug": "social-pku", "file": "社会医学习题集北医mph.pdf", "subject": "社会医学", "pages": 72, "status": "pending"},
-    {"slug": "social-wecan", "file": "社会医学学习指导习题集【卫灿（WECAN）公卫研习社】.pdf", "subject": "社会医学", "pages": 137, "status": "running"},
+    {"slug": "social-wecan", "file": "社会医学学习指导习题集【卫灿（WECAN）公卫研习社】.pdf", "subject": "社会医学", "pages": 137, "status": "ocr-done"},
     {"slug": "nut-3", "file": "营养与食品卫生学学习指导与习题集第3版【卫灿（WECAN ）公卫研习社】.pdf", "subject": "营养与食品卫生学", "pages": 272, "status": "pending"},
     {"slug": "nut-2007", "file": "营养与食品卫生学学习指导及习题集+王舒然老师主编+人卫出版社+2007年版.pdf", "subject": "营养与食品卫生学", "pages": 293, "status": "pending"},
     {"slug": "occ-niu", "file": "需打印的习题集：职业卫生与职业医学 牛侨_11767535.pdf", "subject": "职业卫生与职业医学", "pages": 165, "status": "pending"},

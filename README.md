@@ -100,7 +100,7 @@ work\ocr-venv\Scripts\python.exe scripts\ocr\batch_ocr.py --only stat-6 env-1
 
 - 已确认 20 个 PDF 共约 4,874 页，全部为纯扫描图像。
 - 《流行病学》全书 141 页 OCR 已完成，353 道选择题已解析并上线。
-- 《社会医学》137 页 OCR 正在后台执行；完成后按章解析并接入。
+- 《社会医学》137 页 OCR 已完成，待按章解析并接入。
 - 其余 18 个 PDF 和 2 个 `.doc` 尚未开始。
 - 2 个 `.doc` 需要先在 WPS 中另存为 `.docx`，再进入同一管线。
 
