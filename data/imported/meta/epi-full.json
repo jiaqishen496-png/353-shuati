@@ -21,6 +21,51 @@
       "3题未匹配到答案",
       "图表题（如第14章meta分析森林图）题干为OCR平铺，需人工复核",
       "尚未逐题校对"
-    ]
+    ],
+    "missingAnswers": [
+      {
+        "chapter": "第六章 病例对照研究",
+        "number": 11
+      },
+      {
+        "chapter": "第九章 疾病预后研究",
+        "number": 16
+      },
+      {
+        "chapter": "第十四章 循证医学与系统综述",
+        "number": 21
+      }
+    ],
+    "flags": [
+      {
+        "chapter": "第三章 病因与病因推断",
+        "number": 16,
+        "type": "option-parse",
+        "note": "题干末尾混入选项A，需人工拆开"
+      },
+      {
+        "chapter": "第十四章 循证医学与系统综述",
+        "number": 21,
+        "type": "figure",
+        "note": "meta分析森林图被OCR平铺进题干，需按图复核"
+      },
+      {
+        "chapter": "第八章 筛检与诊断试验",
+        "number": 16,
+        "type": "option-count",
+        "note": "仅识别到4个选项"
+      }
+    ],
+    "sampleAudit": {
+      "checked": 5,
+      "chapters": [
+        "第一章 绪论",
+        "第三章 病因与病因推断",
+        "第五章 队列研究",
+        "第十章 传染病流行病学",
+        "第十四章 循证医学与系统综述"
+      ],
+      "result": "题目主干和选项整体可用；发现个别OCR错字与上述3处结构问题"
+    }
   }
 }

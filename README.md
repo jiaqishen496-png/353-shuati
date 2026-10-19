@@ -65,6 +65,9 @@ python -m http.server 8000
 - 《流行病学学习指导与习题集（第4版）》第五章“队列研究”
 - 58 题：33 道单选、8 道填空、12 个名词解释、4 道简答、1 道分析计算
 - 文件：`data/imported/books/epi-ch5.json`；严格原始格式：`data/imported/raw/epi-ch5.json`；复核记录：`data/imported/meta/epi-ch5.json`
+- 《流行病学学习指导与习题集（第4版）》全书选择题
+- 353 题：15 章；350 题已匹配章末答案，3 题缺答案，全部标记为 OCR 草稿
+- 文件：`data/imported/books/epi-full.json`
 
 ### OCR 管线
 
@@ -85,10 +88,20 @@ node scripts/import-books.mjs
 
 `ocr_book.py` 支持断点续跑：`pages.jsonl` 已存在的页会自动跳过；临时 PNG 在识别后删除。填空/简答和跨页题目仍需按书校正，不能把 OCR 结果直接当成正式题库。
 
+全部 22 个来源登记在 `scripts/ocr/sources.json`。批量续跑：
+
+```powershell
+work\ocr-venv\Scripts\python.exe scripts\ocr\batch_ocr.py
+# 只跑指定书：
+work\ocr-venv\Scripts\python.exe scripts\ocr\batch_ocr.py --only stat-6 env-1
+```
+
 ### 批量状态
 
 - 已确认 20 个 PDF 共约 4,874 页，全部为纯扫描图像。
-- 《流行病学》全书 OCR 正在后台分批执行；完成后按章解析，再接入 `data/imported/`。
+- 《流行病学》全书 141 页 OCR 已完成，353 道选择题已解析并上线。
+- 《社会医学》137 页 OCR 正在后台执行；完成后按章解析并接入。
+- 其余 18 个 PDF 和 2 个 `.doc` 尚未开始。
 - 2 个 `.doc` 需要先在 WPS 中另存为 `.docx`，再进入同一管线。
 
 ## 修改题库

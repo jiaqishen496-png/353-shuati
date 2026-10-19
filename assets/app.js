@@ -361,15 +361,19 @@
             <span class="review-flag">${p.wrong ? `错 ${p.wrong} 次` : ""}</span>
           </summary>
           <div class="review-body">
-            <div class="review-options">
-              ${question.options
-                .map((option, index) => {
-                  const letter = String.fromCharCode(65 + index);
-                  return `<div class="review-option ${question.answer.includes(letter) ? "correct" : ""}"><span>${letter}</span>${escapeHtml(option)}</div>`;
-                })
-                .join("")}
-            </div>
-            <p class="review-answer">正确答案：${question.answer.join("、")}</p>
+            ${
+              question.type === "fill" || question.type === "short"
+                ? `<p class="review-answer">参考答案：${escapeHtml(question.referenceAnswer || "原书未提供")}</p>`
+                : `<div class="review-options">
+                    ${question.options
+                      .map((option, index) => {
+                        const letter = String.fromCharCode(65 + index);
+                        return `<div class="review-option ${question.answer.includes(letter) ? "correct" : ""}"><span>${letter}</span>${escapeHtml(option)}</div>`;
+                      })
+                      .join("")}
+                  </div>
+                  <p class="review-answer">正确答案：${question.answer.join("、")}</p>`
+            }
             <p class="review-explain">${escapeHtml(question.explain || "暂无解析")}</p>
             <p class="review-source">${escapeHtml(QZ.data.subject(question.subject)?.name || "")} · ${escapeHtml(question.chapter)}${question.source ? ` · ${escapeHtml(question.source)}` : ""}</p>
           </div>
